@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {scoreTournament,classifyTournament} from '../src/tournaments/eligibility.js';
+test('strong professional event reaches threshold',()=>assert.ok(scoreTournament({name:'Premier Event',leagueId:'42',startDate:'2099-01-01',endDate:'2099-01-10',tier:1},{knownTeams:12,proMatches:20,hasSchedule:true,providerAgreement:2}).score>=80));
+test('qualifier is rejected',()=>assert.equal(classifyTournament({name:'Regional Qualifier',leagueId:'42',startDate:'2099-01-01',endDate:'2099-01-02',tier:1},{knownTeams:16,proMatches:20,hasSchedule:true,providerAgreement:2}).state,'rejected'));
+test('weak event remains monitoring',()=>assert.equal(classifyTournament({name:'Small Cup',leagueId:'7'},{knownTeams:2,proMatches:1}).state,'monitoring'));

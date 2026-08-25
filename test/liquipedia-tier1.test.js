@@ -1,0 +1,5 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {isoDate,parseWikitext} from '../src/tournaments/liquipediaTierOneProvider.js';import {classifyTournament} from '../src/tournaments/eligibility.js';
+test('parses cross-month date range',()=>assert.deepEqual(isoDate('Sep 29 – Oct 11, 2026'),{startDate:'2026-09-29',endDate:'2026-10-11'}));
+test('parses Tier 1 table row',()=>{const rows=parseWikitext('|-\n| [[BLAST/SLAM/8|BLAST SLAM VIII]] || Sep 29 – Oct 11, 2026 || $750,000 || Europe Malta || 16\n|-');assert.equal(rows[0].name,'BLAST SLAM VIII');assert.equal(rows[0].tier,1);});
+test('verified Tier 1 scores as upcoming',()=>{const x=classifyTournament({name:'PGL Wallachia Season 9',startDate:'2026-09-17',endDate:'2026-09-27',verifiedTierOne:true},{hasSchedule:true},Date.parse('2026-08-23T12:00:00Z'));assert.equal(x.state,'upcoming');assert.ok(x.score>=55);});
+test('qualifier remains rejected even with tier wording',()=>assert.equal(classifyTournament({name:'Tier 1 Regional Qualifier',startDate:'2026-09-01',endDate:'2026-09-02',verifiedTierOne:true},{hasSchedule:true},Date.parse('2026-08-23T12:00:00Z')).state,'rejected'));

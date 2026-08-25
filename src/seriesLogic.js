@@ -1,0 +1,6 @@
+export const normalizeTeam=value=>String(value||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+export const teamPairKey=(a,b)=>[normalizeTeam(a),normalizeTeam(b)].sort().join('|');
+export function calculateSeriesScore(games,a,b){const score={[a]:0,[b]:0};for(const game of games)if(game.status==='ended'&&game.winner){if(normalizeTeam(game.winner)===normalizeTeam(a))score[a]++;else if(normalizeTeam(game.winner)===normalizeTeam(b))score[b]++;}return score;}
+export function selectSeriesScore(games,a,b,liveGame){const derived=calculateSeriesScore(games,a,b);if(!liveGame)return derived;const live={[a]:normalizeTeam(liveGame.radiant)===normalizeTeam(a)?Number(liveGame.radiantSeriesWins||0):Number(liveGame.direSeriesWins||0),[b]:normalizeTeam(liveGame.radiant)===normalizeTeam(b)?Number(liveGame.radiantSeriesWins||0):Number(liveGame.direSeriesWins||0)};return live[a]+live[b]>=derived[a]+derived[b]?live:derived;}
+export const currentGameNumber=score=>Object.values(score).reduce((sum,value)=>sum+Number(value||0),0)+1;
+export function selectClosestSchedule(matches,a,b,now=Date.now()){return matches.filter(match=>teamPairKey(...(match.teams||[]))===teamPairKey(a,b)).sort((x,y)=>Math.abs(new Date(x.beginAt).getTime()-now)-Math.abs(new Date(y.beginAt).getTime()-now))[0]||null;}

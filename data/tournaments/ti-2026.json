@@ -1,0 +1,29 @@
+{
+  "id": "ti-2026",
+  "name": "The International 2026",
+  "shortName": "TI 2026",
+  "leagueId": "19719",
+  "timezone": "Asia/Shanghai",
+  "displayTimezone": "Europe/Copenhagen",
+  "startDate": "2026-08-13",
+  "endDate": "2026-08-23",
+  "mainEventStartDate": "2026-08-20",
+  "mainEventEndDate": "2026-08-23",
+  "location": "Shanghai",
+  "streams": {
+    "twitch": "https://www.twitch.tv/dota2ti",
+    "twitch2": "https://www.twitch.tv/dota2ti_2",
+    "youtube": "https://www.youtube.com/@dota2/streams"
+  },
+  "bracketUrl": "https://liquipedia.net/dota2/The_International/2026/Main_Event",
+  "notificationPolicy": {
+    "dailyOverview": "public",
+    "prematch": "public",
+    "gameStart": "public",
+    "liveUpdate": "public",
+    "gameResult": "public",
+    "recap": "public",
+    "slashCommands": "private",
+    "technicalWarnings": "console"
+  }
+}

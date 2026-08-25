@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {linkTierOneChildren} from '../src/tournaments/relationships.js';import {parseWikitext,isoDate} from '../src/tournaments/liquipediaTierOneProvider.js';
+test('legacy isoDate export remains available',()=>assert.deepEqual(isoDate('Sep 29 – Oct 11, 2026'),{startDate:'2026-09-29',endDate:'2026-10-11'}));
+test('legacy parseWikitext remains available',()=>assert.equal(parseWikitext('|-\n| [[BLAST/SLAM/8|BLAST SLAM VIII]] || Sep 29 – Oct 11, 2026').length,1));
+test('main event type is inferred when omitted',()=>{const rows=linkTierOneChildren([{id:'main',name:'Esports Nations Cup 2026',verifiedTierOne:true},{id:'q',name:'Esports Nations Cup 2026: Europe West Qualifier'}]);assert.equal(rows[1].parentTournamentId,'main');});

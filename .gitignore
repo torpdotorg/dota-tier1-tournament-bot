@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Runtime database files
+data/bot.db
+data/bot.db-*
+data/*.db-shm
+data/*.db-wal
+
+# Generated runtime data
+data/teams.json
+data/catalog/
+assets/team-logos/
+
+# Builds and logs
+dist/
+*.log
+npm-debug.log*
+
+# Operating system files
+.DS_Store
+Thumbs.db
+``

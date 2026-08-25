@@ -1,0 +1,10 @@
+{
+  "id": "fixture-tier1-event",
+  "name": "Fixture Tier 1 Event",
+  "leagueId": "99999",
+  "tier": 1,
+  "eventType": "main",
+  "teams": 8,
+  "bestOf": 3,
+  "publish": false
+}

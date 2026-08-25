@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {sanitizeEmbed,validatePayload,limits} from '../src/lib/payloadValidator.js';
+test('trims oversized Discord fields',()=>{const x=sanitizeEmbed({title:'x'.repeat(400),description:'y'.repeat(5000),fields:Array.from({length:30},()=>({name:'n'.repeat(300),value:'v'.repeat(1200)}))});assert.ok(x.title.length<=limits.title);assert.ok(x.description.length<=limits.description);assert.ok(x.fields.length<=limits.fields);assert.ok(x.fields.every(f=>f.name.length<=limits.fieldName&&f.value.length<=limits.fieldValue));});
+test('validates ordinary payload',()=>assert.equal(validatePayload({embeds:[{title:'OK'}]}).valid,true));
