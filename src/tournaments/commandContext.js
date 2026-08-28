@@ -28,9 +28,10 @@ export function resolveCommandTournament(query = null) {
     return null;
   }
   return rows.find(row => row.activationState === 'active-coverage')
+    || rows.find(row => row.state === 'active' && row.eventType === 'main')
+    || rows.find(row => row.state === 'upcoming' && row.eventType === 'main')
     || rows.find(row => row.state === 'active')
     || rows.find(row => row.state === 'upcoming')
-    || rows.find(row => row.coverage === 'configured')
     || null;
 }
 

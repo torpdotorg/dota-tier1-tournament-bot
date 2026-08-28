@@ -18,5 +18,5 @@ async function cycle(client,{force=false}={}){
   try { await reconcileCoverageWorkers({ publish: false }); }
   catch (error) { console.warn(`[Coverage] Worker reconciliation failed: ${error.message}`); }
 }
-export function startTournamentDiscovery(client){setTimeout(()=>cycle(client).catch(error=>console.warn(`[Discovery] Initial cycle failed: ${error.message}`)),30000).unref();setInterval(()=>cycle(client).catch(error=>console.warn(`[Discovery] Cycle failed: ${error.message}`)),6*60*60*1000).unref();console.log('[Discovery] Tournament discovery, preparation, activation and coverage runtime started in observation mode (6-hour cadence).');}
+export function startTournamentDiscovery(client){setTimeout(()=>cycle(client).catch(error=>console.warn(`[Discovery] Initial cycle failed: ${error.message}`)),1000).unref();setInterval(()=>cycle(client).catch(error=>console.warn(`[Discovery] Cycle failed: ${error.message}`)),6*60*60*1000).unref();console.log('[Discovery] Tournament discovery, preparation, activation and coverage runtime started in observation mode (initial cycle in 1 second; 6-hour cadence).');}
 export { cycle as runDiscoveryPreparationCycle };

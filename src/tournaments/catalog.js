@@ -5,7 +5,7 @@ import { withinDiscoveryHorizon } from './eligibility.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const file = path.join(root, 'data', 'catalog', 'tournaments.json');
-const empty = () => ({ version: 5, tournaments: {} });
+const empty = () => ({version:6, tournaments:{}});
 
 function ensure() {
   fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -60,7 +60,29 @@ function sameTournament(a, b) {
 function mergeSources(a = [], b = []) {
   return [...new Set([...a, ...b].filter(Boolean))];
 }
+function sanitizeLegacyConfiguredMetadata(event) {
+  if (event.coverage !== 'configured' && !(event.sources || []).includes('configured') && event.provider !== 'configured') return event;
+  const sources = (event.sources || [event.provider]).filter(source => source !== 'configured');
+  const provider = event.provider === 'configured' ? (sources[0] || 'archive') : event.provider;
+  const { coverage, ...rest } = event;
+  return {
+    ...rest,
+    provider,
+    sources,
+    providerAgreement: sources.length,
+    legacyConfiguredMetadataRemovedAt: new Date().toISOString()
+  };
+}
 
+const resolutionFields = ['providerIdState','providerIdCandidate','providerIdCandidateName','providerIdConfidence','providerIdReason','providerIdSource','providerIdEvidence','providerIdBestRejectedName','providerIdBestRejectedLeagueId','providerIdBestRejectedConfidence','providerIdAlternatives'];
+function latestResolution(current, incoming) {
+  const patch = {};
+  for (const field of resolutionFields) {
+    if (Object.prototype.hasOwnProperty.call(incoming, field)) patch[field] = incoming[field];
+    else if (Object.prototype.hasOwnProperty.call(current, field)) patch[field] = current[field];
+  }
+  return patch;
+}
 function mergeDuplicate(current, incoming) {
   const preferred = current.coverage === 'configured'
     ? current
@@ -76,6 +98,7 @@ function mergeDuplicate(current, incoming) {
   return {
     ...secondary,
     ...preferred,
+    ...latestResolution(current, incoming),
     leagueId,
     score: Math.max(Number(current.score || 0), Number(incoming.score || 0)),
     sources,
@@ -103,8 +126,9 @@ export function mergeAndPruneTournaments(candidates, { protectedLeagueIds = [], 
   const protectedIds = new Set(protectedLeagueIds.map(String));
   const merged = [];
 
-  for (const old of Object.values(oldCatalog.tournaments || {})) {
-    const valid = old.coverage === 'configured' || old.verifiedTierOne || old.verifiedTierOneChild;
+  for (const stored of Object.values(oldCatalog.tournaments || {})) {
+    const old = sanitizeLegacyConfiguredMetadata(stored);
+    const valid = old.verifiedTierOne || old.verifiedTierOneChild;
     const keep = valid && (protectedIds.has(String(old.leagueId)) || withinDiscoveryHorizon(old, now));
     if (keep) mergeIntoList(merged, old);
   }
@@ -125,7 +149,7 @@ export function mergeAndPruneTournaments(candidates, { protectedLeagueIds = [], 
   for (const row of merged) tournaments[row.id] = row;
 
   const removed = Math.max(0, Object.keys(oldCatalog.tournaments || {}).length - Object.keys(tournaments).length);
-  const catalog = { version: 5, lastPrunedAt: stamp, tournaments };
+  const catalog = {version:6, lastPrunedAt:stamp, tournaments};
   writeCatalog(catalog);
   return { catalog, removed };
 }

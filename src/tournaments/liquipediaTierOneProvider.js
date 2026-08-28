@@ -1,3 +1,4 @@
+import { coordinatedLiquipediaFetch, liquipediaRequestState } from './liquipediaRequestCoordinator.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,22 +8,10 @@ const cacheFile = path.join(root, 'data', 'catalog', 'liquipedia-tier1.json');
 const api = 'https://liquipedia.net/dota2/api.php';
 const cacheMs = 6 * 60 * 60 * 1000;
 
-async function fetchApiJson(url, options = {}, timeoutMs = 30000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(url, { ...options, signal: controller.signal });
-    if (!response.ok) throw new Error(`HTTP ${response.status} from ${new URL(url).hostname}`);
-    return await response.json();
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-function readCache() {
+function readCache(allowStale = false) {
   try {
     const value = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
-    if (Date.now() - Date.parse(value.fetchedAt) < cacheMs && Array.isArray(value.tournaments) && value.tournaments.length) {
+    if ((allowStale || Date.now() - Date.parse(value.fetchedAt) < cacheMs) && Array.isArray(value.tournaments) && value.tournaments.length) {
       return { tournaments: value.tournaments, diagnostics: value.diagnostics || { parsedRows: value.tournaments.length } };
     }
   } catch {}
@@ -172,7 +161,11 @@ export async function discoverLiquipediaTierOne(config, { force = false } = {}) 
     if (cached) return { status: 'cached', tournaments: cached.tournaments, diagnostics: cached.diagnostics };
   }
   const url = `${api}?action=parse&page=${encodeURIComponent('Portal:Tournaments')}&prop=text&format=json&formatversion=2`;
-  const data = await fetchApiJson(url, { headers: { 'User-Agent': config.liquipediaUserAgent, 'Accept-Encoding': 'gzip' } }, 30000);
+  const state = liquipediaRequestState();
+  if (state.cooldownActive) { const stale=readCache(true); if(stale)return{status:'stale-cache',tournaments:stale.tournaments,reason:`Liquipedia cooldown active until ${state.cooldownUntil}`,diagnostics:stale.diagnostics}; }
+  let data;
+  try { data=await coordinatedLiquipediaFetch(url,{headers:{'User-Agent':config.liquipediaUserAgent,'Accept-Encoding':'gzip'}},30000); }
+  catch(error){ const stale=readCache(true); if(stale)return{status:'stale-cache',tournaments:stale.tournaments,reason:error.message,diagnostics:stale.diagnostics}; throw error; }
   const parsed = parsePortalHtml(data?.parse?.text || '');
   if (!parsed.tournaments.length) {
     const oldCache = readCache();

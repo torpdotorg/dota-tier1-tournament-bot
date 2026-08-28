@@ -2,7 +2,6 @@ import { listTournaments, updateTournament } from './catalog.js';
 import { preparationDecision } from './preparationRules.js';
 import { syncTeamRegistry } from '../teamRegistry.js';
 import { syncApplicationTeamEmojis } from '../teamEmojiService.js';
-import { getTournamentTeams } from '../providers/valveLeague.js';
 
 let inFlight = null;
 let lastRun = {
@@ -29,7 +28,6 @@ export async function prepareUpcomingTournaments(client, { force = false } = {})
     let waiting = 0;
     let failed = 0;
     let skipped = 0;
-    let configuredTeams = null;
     let lastPreparedTournament = lastRun.lastPreparedTournament;
     let lastPreparedAt = lastRun.lastPreparedAt;
 
@@ -39,16 +37,7 @@ export async function prepareUpcomingTournaments(client, { force = false } = {})
         continue;
       }
 
-      let effectiveEvent = event;
-      if (event.coverage === 'configured' && (!Array.isArray(event.participants) || event.participants.length < 2)) {
-        try {
-          configuredTeams ??= await getTournamentTeams();
-          effectiveEvent = { ...event, participants: configuredTeams };
-        } catch (error) {
-          console.warn(`[Preparation] Configured team fallback unavailable: ${error.message}`);
-        }
-      }
-
+      const effectiveEvent = event;
       const decision = preparationDecision(effectiveEvent);
       if (!decision.eligible) {
         waiting++;
