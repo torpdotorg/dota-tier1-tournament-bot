@@ -1,8 +1,94 @@
-import fs from 'node:fs';import path from 'node:path';
-const root=process.cwd(),read=f=>fs.readFileSync(path.join(root,f),'utf8');const pkg=JSON.parse(read('package.json')),lock=JSON.parse(read('package-lock.json'));
-const required=['src/index.js','src/scheduler.js','src/bracket.js','src/seriesOverview.js','src/seriesLogic.js','src/formatters.js','src/teamRegistry.js','src/teamEmojiService.js','src/tournamentConfig.js','src/diagnostics.js','src/tournaments/activationRules.js','src/tournaments/activationService.js','src/tournaments/providerHealth.js','src/tournaments/preparationSkip.js','src/tournaments/coverageRuntime.js','src/tournaments/lifecycleAlignment.js','src/tournaments/workers/providerAdapter.js','src/tournaments/workers/adapterRegistry.js','src/tournaments/workers/coverageWorker.js','src/tournaments/workers/workerManager.js','src/tournaments/workers/configuredAdapter.js','src/tournaments/workers/openDotaTournamentAdapter.js','README.md','CHANGELOG.md','docs/ARCHITECTURE.md','docs/OPERATIONS.md','src/tournaments/simulationEngine.js','scripts/simulate-tournament.js','test/fixtures/tier1-tournament.json','src/tournaments/commandContext.js','src/tournaments/contextCommandViews.js','src/tournaments/structureViews.js','src/tournaments/workers/liquipediaStructureAdapter.js','src/lib/payloadValidator.js','data/tournaments/ti-2026.json','scripts/check-syntax.js'];
-for(const file of required)if(!fs.existsSync(path.join(root,file)))throw new Error(`Missing release file: ${file}`);
-if(!/^\d+\.\d+\.\d+$/.test(pkg.version))throw new Error('Invalid semantic version');if(lock.version!==pkg.version||lock.packages?.['']?.version!==pkg.version)throw new Error('package-lock version does not match package.json');
-const checks=[['src/index.js','syncApplicationTeamEmojis'],['src/index.js','MessageFlags.Ephemeral'],['src/index.js',"commandName==='series'"],['src/scheduler.js','finalRetryAttempts'],['src/scheduler.js','enrichCompletedReports'],['src/scheduler.js','refreshSeriesOverview'],['src/bracket.js','baselineComplete'],['src/register-commands.js',"setName('diagnostics')"],['src/register-commands.js',"setName('heroes')"],['src/register-commands.js',"setName('series')"],['src/formatters.js','Pending full replay parsing'],['src/formatters.js','heroStatsEmbed'],['src/seriesOverview.js','validatePayload'],['src/tournaments/discoveryScheduler.js','evaluateTournamentActivations'],['src/diagnostics.js','activationSummary'],['src/tournaments/discoveryService.js','openDotaResult'],['src/tournaments/discoveryScheduler.js','continuing with existing catalog'],['src/tournaments/discoveryScheduler.js','reconcileCoverageRuntimes'],['src/register-commands.js',"setName('coverage')"],['src/index.js',"commandName==='coverage'"],['src/scheduler.js','configuredTournamentIsComplete'],['src/tournaments/discoveryScheduler.js','alignCompletedTournamentStates'],['src/tournaments/discoveryScheduler.js','reconcileCoverageWorkers'],['src/index.js','ConfiguredTournamentAdapter'],['src/index.js','OpenDotaTournamentAdapter'],['src/tournaments/workers/openDotaTournamentAdapter.js','leagueMatches'],['src/diagnostics.js','coverageWorkerSummary'],['src/register-commands.js',"setName('simulate-tournament')"],['src/index.js',"commandName==='simulate-tournament'"],['src/tournaments/simulationEngine.js','simulateTournamentLifecycle'],['src/index.js','tournamentChoices'],['src/index.js','contextualScheduleEmbed'],['src/register-commands.js',"setName('tournament')"],['src/index.js','Legacy configured-tournament scheduler not started'],['src/index.js','LiquipediaStructureAdapter'],['src/register-commands.js',"setName('tournament-info')"],['src/register-commands.js',"setName('teams')"],['src/register-commands.js',"setName('tournament-info-debug')"],['src/index.js',"commandName==='tournament-info-debug'"],['src/tournaments/workers/liquipediaStructureAdapter.js','rawCapturePath'],['src/tournaments/workers/liquipediaStructureAdapter.js','CACHE_SCHEMA = 2'],['src/tournaments/workers/liquipediaStructureAdapter.js','participantSlots'],['src/tournaments/workers/liquipediaStructureAdapter.js','bracketMatchNodesFound'],['src/tournaments/workers/liquipediaStructureAdapter.js','extractLegacyTeams'],['src/tournaments/structureViews.js','tournamentStructureDebugEmbed'],['src/tournaments/structureViews.js','groupedBracketDescription'],['src/tournaments/structureViews.js','Awaiting publication • Team names'],['src/tournaments/workers/liquipediaStructureAdapter.js','parseLiquipediaStructure'],['src/index.js','Dota Tier 1 Tournament Platform is online']];
-for(const [file,token] of checks)if(!read(file).includes(token))throw new Error(`Missing ${token} in ${file}`);
+import fs from 'node:fs';
+import path from 'node:path';
+
+const root = process.cwd();
+const read = file => fs.readFileSync(path.join(root, file), 'utf8');
+const pkg = JSON.parse(read('package.json'));
+const lock = JSON.parse(read('package-lock.json'));
+
+const required = [
+  'src/index.js',
+  'src/config.js',
+  'src/db.js',
+  'src/diagnostics.js',
+  'src/providers/steam.js',
+  'src/providers/valveLeague.js',
+  'src/tournaments/catalog.js',
+  'src/tournaments/discoveryService.js',
+  'src/tournaments/liquipediaRequestCoordinator.js',
+  'src/tournaments/liquipediaTierOneProvider.js',
+  'src/tournaments/providerIdDiscovery.js',
+  'src/tournaments/providerResolution.js',
+  'src/tournaments/platformView.js',
+  'src/tournaments/workers/valveTournamentAdapter.js',
+  'src/tournaments/workers/openDotaTournamentAdapter.js',
+  'src/tournaments/workers/liquipediaStructureAdapter.js',
+  'src/tournaments/workers/coverageWorker.js',
+  'src/tournaments/workers/workerManager.js',
+  'src/tournaments/commandContext.js',
+  'src/tournaments/contextCommandViews.js',
+  'scripts/check-syntax.js'
+];
+
+for (const file of required) {
+  if (!fs.existsSync(path.join(root, file))) throw new Error(`Missing release file: ${file}`);
+}
+
+if (lock.version !== pkg.version || lock.packages?.['']?.version !== pkg.version) {
+  throw new Error('package-lock version does not match package.json');
+}
+
+const source = [...walk(path.join(root, 'src'))]
+  .filter(file => file.endsWith('.js'))
+  .map(readAbsolute)
+  .join('\n');
+
+for (const forbidden of [
+  'tiLeagueId',
+  'TI_LEAGUE_ID',
+  'ACTIVE_TOURNAMENT',
+  'getTiLiveGames',
+  'getRecentTiMatches',
+  'ConfiguredTournamentAdapter',
+  'pandascore'
+]) {
+  if (source.includes(forbidden)) throw new Error(`Retired runtime token remains: ${forbidden}`);
+}
+
+for (const token of [
+  'ValveTournamentAdapter',
+  'contextualTeamEmbed',
+  'contextualHeroStatsEmbed',
+  'tournamentNotificationKey',
+  'Catalog-driven tournament runtime initialized in observation mode',
+  'coordinatedLiquipediaFetch',
+  'liquipediaRequestState',
+  'providerResolutionDiagnostics',
+  'candidatePool',
+  'latestResolution',
+  'version:6'
+]) {
+  if (!source.includes(token)) throw new Error(`Missing platform token: ${token}`);
+}
+
+for (const forbiddenFile of [
+  'src/providers/pandascore.js',
+  'src/scheduler.js',
+  'src/tournaments/workers/configuredAdapter.js'
+]) {
+  if (fs.existsSync(path.join(root, forbiddenFile))) throw new Error(`Retired runtime file remains: ${forbiddenFile}`);
+}
+
 console.log(`Release validation passed for v${pkg.version}`);
+
+function* walk(dir) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const file = path.join(dir, entry.name);
+    if (entry.isDirectory()) yield* walk(file);
+    else yield file;
+  }
+}
+
+function readAbsolute(file) {
+  return fs.readFileSync(file, 'utf8');
+}

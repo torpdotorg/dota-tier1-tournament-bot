@@ -1,5 +1,14 @@
 import 'dotenv/config';
-import {tournament} from './tournamentConfig.js';
 const required=['DISCORD_TOKEN','DISCORD_CLIENT_ID','DISCORD_GUILD_ID'];
 export function validateConfig(){const missing=required.filter(name=>!process.env[name]);if(missing.length)throw new Error(`Missing required .env values: ${missing.join(', ')}`);}
-export const config={discordToken:process.env.DISCORD_TOKEN,clientId:process.env.DISCORD_CLIENT_ID,guildId:process.env.DISCORD_GUILD_ID,updatesChannelId:process.env.DISCORD_UPDATES_CHANNEL_ID,steamApiKey:process.env.STEAM_API_KEY,liquipediaUserAgent:process.env.LIQUIPEDIA_USER_AGENT||'',tiLeagueId:String(process.env.TI_LEAGUE_ID||tournament.leagueId),timezone:process.env.TIMEZONE||'Europe/Copenhagen',dailyScheduleCron:process.env.DAILY_SCHEDULE_CRON||'0 8 * * *',prematchMinutes:Number(process.env.PREMATCH_MINUTES||15),matchPollSeconds:Math.max(60,Number(process.env.MATCH_POLL_SECONDS||60)),scheduleRefreshMinutes:Math.max(1,Number(process.env.SCHEDULE_REFRESH_MINUTES||5)),bracketRefreshMinutes:Math.max(1,Number(process.env.BRACKET_REFRESH_MINUTES||5)),tournamentTimezone:process.env.TOURNAMENT_TIMEZONE||tournament.timezone,displayTimezone:process.env.DISPLAY_TIMEZONE||tournament.displayTimezone,recapDelayMinutes:Math.max(1,Number(process.env.END_OF_DAY_RECAP_DELAY_MINUTES||5)),gameUpdateIntervalMinutes:Math.max(10,Number(process.env.GAME_UPDATE_INTERVAL_MINUTES||process.env.MIDGAME_UPDATE_MINUTES||20)),midgameUpdateMinutes:Math.max(10,Number(process.env.GAME_UPDATE_INTERVAL_MINUTES||process.env.MIDGAME_UPDATE_MINUTES||20)),lategameUpdateMinutes:Math.max(20,Number(process.env.LATEGAME_UPDATE_MINUTES||40))};
+export const config={
+  discordToken:process.env.DISCORD_TOKEN,
+  clientId:process.env.DISCORD_CLIENT_ID,
+  guildId:process.env.DISCORD_GUILD_ID,
+  updatesChannelId:process.env.DISCORD_UPDATES_CHANNEL_ID,
+  steamApiKey:process.env.STEAM_API_KEY,
+  liquipediaUserAgent:process.env.LIQUIPEDIA_USER_AGENT||'',
+  timezone:process.env.TIMEZONE||'Europe/Copenhagen',
+  scheduleRefreshMinutes:Math.max(1,Number(process.env.SCHEDULE_REFRESH_MINUTES||5)),
+  gameUpdateIntervalMinutes:Math.max(10,Number(process.env.GAME_UPDATE_INTERVAL_MINUTES||20))
+};

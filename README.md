@@ -2,36 +2,57 @@
 
 A Discord platform for discovering, preparing, activating, and covering Tier 1 Dota 2 tournaments.
 
+## Requirements
+
+- Node.js 22 or newer
+- Discord application credentials
+- Steam API key
+- A descriptive Liquipedia user agent
+
 ## Install or update
 
 1. Stop the bot.
-2. Extract the release over the existing project.
+2. Copy the release files over the existing project.
 3. Preserve `.env`, `data/`, `assets/`, and `node_modules/`.
-4. Run `npm run register` when commands changed.
-5. Run `npm run release-check`.
-6. Run `npm start`.
+4. Run `npm install --package-lock-only` when package metadata changes.
+5. Run `npm run register` only when slash-command definitions change.
+6. Run `npm run validate-platform`.
+7. Start with `npm start`.
 
-## Current platform layers
+## Platform capabilities
 
-- Tier 1 discovery through configured, OpenDota, and Liquipedia sources
-- Qualifier, play-in, and showmatch linking
-- Team, logo, and Discord emoji preparation
-- Activation and completion lifecycle
-- Catalog-driven runtime registry
-- Generic coverage worker framework
-- Automatic retirement of completed legacy tournament schedulers
-- Private diagnostics and release validation
+- Tier 1 tournament discovery through OpenDota and Liquipedia
+- Main-event, qualifier, and play-in relationships
+- Catalog-driven tournament selection and lifecycle handling
+- Tournament-aware schedule, results, teams, heroes, and bracket views
+- Generic Valve, OpenDota, and Liquipedia adapters
+- Tournament-scoped coverage workers in observation mode
+- Team identity, logo, and Discord emoji preparation
+- Provider-ID candidate scoring with ambiguity protection
+- Shared Liquipedia throttling, persistent HTTP 429 cooldown, and stale-cache fallback
+- Public platform status and private administrator diagnostics
+- Offline release validation and tournament lifecycle simulation
 
 ## Commands
 
-`/today`, `/next`, `/standings`, `/match`, `/results`, `/heroes`, `/series`, `/bracket`, `/tournaments`, `/coverage`, `/bot-status`, `/diagnostics`
+User commands:
 
-See `docs/OPERATIONS.md` for operational checks and `CHANGELOG.md` for release history.
+`/today`, `/next`, `/standings`, `/match`, `/results`, `/heroes`, `/series`, `/bracket`, `/tournaments`, `/tournament-info`, `/teams`, `/platform`, `/bot-status`
 
-## Platform simulation
+Operational commands:
 
-Run `npm run simulate-tournament` for an offline synthetic lifecycle test. Run `npm run validate-platform` for release validation followed by simulation. The simulator does not post to Discord or alter the production tournament catalog.
+`/coverage`, `/diagnostics`, `/tournament-info-debug`, `/simulate-tournament`
 
-## Tournament-aware commands
+Core information commands support tournament selection. When no tournament is selected, the bot prefers the most relevant active or upcoming main event.
 
-Core information commands accept an optional autocomplete `tournament` parameter. Omit the option to use the most relevant active or upcoming event. Select The International 2026 to access archived TI data.
+## Validation
+
+Run:
+
+```bat
+npm run validate-platform
+```
+
+This performs syntax checks, automated tests, release validation, and an offline synthetic tournament lifecycle simulation. The simulation sends no Discord messages and does not modify the production tournament catalog.
+
+See `docs/OPERATIONS.md` for operational guidance and `CHANGELOG.md` for release history.

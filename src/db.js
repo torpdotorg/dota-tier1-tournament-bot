@@ -72,3 +72,10 @@ export function setSetting(key, value) {
 export default db;
 
 export function getNotificationMessageId(key) { return db.prepare('SELECT discord_message_id FROM notifications WHERE event_key = ?').get(key)?.discord_message_id || null; }
+
+// Tournament-scoped helpers used by the generic runtime.
+export function scopedMatchId(tournamentId, matchId) { return `${tournamentId}:${matchId}`; }
+export function setTournamentMatchState(tournamentId, matchId, value) { return setMatchState(scopedMatchId(tournamentId, matchId), { ...value, tournamentId: String(tournamentId), matchId: String(matchId) }); }
+export function getTournamentMatchState(tournamentId, matchId) { return getMatchState(scopedMatchId(tournamentId, matchId)); }
+export function getTournamentTrackedMatches(tournamentId) { return getTrackedMatches().filter(row => String(row.tournamentId || '') === String(tournamentId)); }
+export function tournamentNotificationKey(tournamentId, scope, entityId = null) { return ['tournament', tournamentId, scope, entityId].filter(value => value != null && value !== '').join(':'); }

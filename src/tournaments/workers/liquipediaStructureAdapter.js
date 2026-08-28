@@ -1,3 +1,4 @@
+import { coordinatedLiquipediaFetch, liquipediaRequestState } from '../liquipediaRequestCoordinator.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { TournamentProviderAdapter } from './providerAdapter.js';
@@ -42,11 +43,11 @@ function validStructure(structure) {
     && Number(structure?.diagnostics?.htmlBytes || 0) > 0
     && structure?.format !== ':';
 }
-function readCache(event) {
+function readCache(event, allowStale = false) {
   try {
     const value = JSON.parse(fs.readFileSync(cacheFile(event), 'utf8'));
     if (value.schema !== CACHE_SCHEMA || !validStructure(value.structure)) return null;
-    if (Date.now() - Date.parse(value.fetchedAt) >= CACHE_MS) return null;
+    if (!allowStale && Date.now() - Date.parse(value.fetchedAt) >= CACHE_MS) return null;
     return value.structure;
   } catch { return null; }
 }
@@ -57,19 +58,10 @@ function writeCache(event, structure) {
   return true;
 }
 async function fetchPageHtml(event, config) {
-  const page = pageName(event);
-  if (!page) throw new Error('Liquipedia page identifier is unavailable');
-  if (!config?.liquipediaUserAgent) throw new Error('LIQUIPEDIA_USER_AGENT is not configured');
-  const url = `${API}?action=parse&page=${encodeURIComponent(page)}&prop=text&format=json&formatversion=2`;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 30_000);
-  try {
-    const response = await fetch(url, { headers: { 'User-Agent': config.liquipediaUserAgent, 'Accept-Encoding': 'gzip' }, signal: controller.signal });
-    if (!response.ok) throw new Error(`HTTP ${response.status} from liquipedia.net`);
-    const data = await response.json();
-    if (!data?.parse?.text) throw new Error('Liquipedia returned no parsed page content');
-    return data.parse.text;
-  } finally { clearTimeout(timer); }
+  const page=pageName(event);if(!page)throw new Error('Liquipedia page identifier is unavailable');if(!config?.liquipediaUserAgent)throw new Error('LIQUIPEDIA_USER_AGENT is not configured');
+  const url=`${API}?action=parse&page=${encodeURIComponent(page)}&prop=text&format=json&formatversion=2`;
+  const data=await coordinatedLiquipediaFetch(url,{headers:{'User-Agent':config.liquipediaUserAgent,'Accept-Encoding':'gzip'}},30000);
+  if(!data?.parse?.text)throw new Error('Liquipedia returned no parsed page content');return data.parse.text;
 }
 function extractInfobox(html) {
   const result = {};
@@ -196,7 +188,9 @@ export class LiquipediaStructureAdapter extends TournamentProviderAdapter {
   capabilities(context) { return { tournamentInfo: this.supports(context), teams: this.supports(context), bracket: this.supports(context) }; }
   async getStructure(context, { force = false } = {}) {
     if (!force) { const cached = readCache(context); if (cached) return { ...cached, cacheStatus: 'cached' }; }
-    const html = await fetchPageHtml(context, this.config);
+    const state=liquipediaRequestState();
+    if(state.cooldownActive){const stale=readCache(context,true);if(stale)return{...stale,cacheStatus:'stale-cache'};}
+    let html;try{html=await fetchPageHtml(context,this.config);}catch(error){const stale=readCache(context,true);if(stale)return{...stale,cacheStatus:'stale-cache'};throw error;}
     const rawPath = captureRaw(context, html);
     const structure = { ...parseLiquipediaStructure(html, context), fetchedAt: new Date().toISOString(), rawCapturePath: path.relative(process.cwd(), rawPath) };
     writeCache(context, structure);

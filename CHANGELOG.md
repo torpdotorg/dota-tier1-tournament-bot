@@ -1,66 +1,57 @@
 # Changelog
 
-## v2.0.0 — 24.08.2026
+## v2.3.5 - 28.08.2026
 
-- Added tournament selection with autocomplete to `/today`, `/next`, `/standings`, `/results`, `/series`, and `/bracket`
-- Commands resolve tournament context from the catalog instead of assuming TI 2026
+- Consolidated the generic multi-tournament runtime into one stable release baseline
+- Updated package and lockfile metadata to v2.3.5
+- Simplified startup and status wording after removal of the retired TI-specific runtime
+- Updated README documentation for the current catalog-driven platform
+- Expanded release validation for provider resolution, shared Liquipedia throttling, and catalog schema 6
+- Removed obsolete documentation references to archived TI command behavior
+
+## v2.3.0-v2.3.4 - 26.08.2026 to 28.08.2026
+
+- Added safe provider-ID candidate scoring without automatic assignment
+- Added provider-resolution diagnostics and best-rejected candidate evidence
+- Added Liquipedia external-link and Steam league-listing candidate discovery
+- Added candidate-source visibility to `/platform`
+- Added shared Liquipedia request coordination across catalog discovery, structure parsing, and provider-ID discovery
+- Added persistent HTTP 429 cooldown across bot restarts
+- Added cached and stale-cache fallbacks during provider outages and cooldowns
+- Preserved the existing tournament catalog when live discovery is unavailable
+- Added catalog schema 6 and persistence of current provider-resolution evidence
+
+## v2.2.0-v2.2.6 - 26.08.2026
+
+- Removed the TI-specific configured runtime and legacy scheduler
+- Made Valve, Steam, OpenDota, and Liquipedia access tournament-contextual
+- Made `/match` and `/heroes` tournament-aware
+- Prevented cross-tournament fallback to archived TI data
+- Preferred upcoming main events over qualifiers for automatic command context
+- Grouped discovery output into main events and qualifiers/play-ins
+- Improved unpublished teams, bracket, and schedule messages
+- Added the public `/platform` operational-status command
+- Added catalog, provider, preparation, and coverage health reporting
+
+## v2.1.0-v2.1.4 - 24.08.2026
+
+- Added tournament information, teams, bracket, and structure-debug commands
+- Added real Liquipedia tournament-page parsing
+- Added participant-slot and qualifier-source extraction
+- Added bracket topology extraction and grouped round presentation
+- Added structure caching, raw-page capture, compatibility support, and regression tests
+
+## v2.0.0 - 24.08.2026
+
+- Added tournament selection with autocomplete to core information commands
+- Resolved command context from the tournament catalog
 - Added contextual schedule, next-series, and results views
-- Preserved archived TI command behavior when TI 2026 is selected
-- Added factual unavailable-state messages when a selected tournament lacks a required adapter
-- Kept all slash-command responses private
+- Added factual unavailable-state messages for unsupported capabilities
+- Kept slash-command responses private
 
-## v1.9.0 — 24.08.2026
+## v1.6.0-v1.9.0 - 24.08.2026
 
-- Added a synthetic end-to-end tournament lifecycle simulator
-- Validates discovery-ready data, activation, runtime, worker observation, live series, results, and completion
-- Added `npm run simulate-tournament`
-- Added `npm run validate-platform` to run release checks and the full simulation
-- Added private `/simulate-tournament` administrator command
-- Simulation sends zero public Discord messages
-- Added reusable fixture data and lifecycle regression tests
-
-## v1.8.2 — 24.08.2026
-
-- Added a contextual OpenDota adapter for non-configured tournaments with a league ID
-- Normalized tournament schedules and completed results behind the generic adapter contract
-- Added one-minute provider caching to reduce duplicate OpenDota requests
-- Generic workers now perform observation polling after successful startup
-- Added degraded-worker visibility to `/coverage` and `/diagnostics`
-- Kept generic workers non-publishing until real event validation is complete
-
-## v1.8.1 — 24.08.2026
-
-- Retired the legacy configured-tournament scheduler after tournament completion
-- Prevented creation of idle TI polling timers
-- Replaced TI-specific console and bot-status wording with platform wording
-- Marked the configured tournament as archived in diagnostics
-- Generalized slash-command descriptions
-- Continued the consolidated documentation policy with no version-specific README files
-
-## v1.8.0 — 24.08.2026
-
-- Added generic tournament provider adapter contract
-- Added per-tournament coverage workers in observation mode
-- Added adapter registry and safe degraded state
-- Added tournament-scoped worker message keys
-- Expanded `/coverage` and `/diagnostics` with worker state
-- Consolidated release documentation into `README.md`, `CHANGELOG.md`, and `docs/`
-- Removed version-specific README files from release packages
-
-## v1.7.1 — 24.08.2026
-
-- Aligned completed tournament states
-- Stopped scheduled posts and polling after tournament completion
-- Archived persistent bracket and series messages
-
-## v1.7.0 — 24.08.2026
-
-- Added catalog-driven coverage runtime registry
-- Added tournament-scoped message namespaces
-- Added `/coverage`
-
-## v1.6.x — 24.08.2026
-
-- Added automatic activation lifecycle
-- Added provider isolation and recovery
-- Added participant persistence and preparation safety
+- Added autonomous preparation, activation, lifecycle alignment, and provider isolation
+- Added tournament-scoped runtime and worker infrastructure
+- Added generic adapters and observation-mode workers
+- Added the offline tournament lifecycle simulator and full platform validation

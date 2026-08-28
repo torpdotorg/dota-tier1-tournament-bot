@@ -66,20 +66,32 @@ export function tournamentInfoEmbed(event, structure) {
 
 export function tournamentTeamsEmbed(event, structure) {
   const teams = structure?.teams || [];
-  const description = teams.length
-    ? teams.map((team, index) => `${index + 1}. ${team.name}`).join('\n').slice(0, 4000)
-    : structure?.participantSlots?.length ? structure.participantSlots.map(slot=>`**${slot.slot}. ${slot.name || 'TBD'}**${slot.status ? ` — ${slot.status}` : ''}${slot.qualifier ? ` (${slot.qualifier})` : ''}`).join('\n').slice(0,4000) : structure?.participantCount ? `${structure.participantCount} participants are expected.\n\nThe verified team roster has not been published yet.` : 'Participating teams have not been published in a structure the bot can verify yet.';
+  const slots = structure?.participantSlots || [];
+  const namedSlots = slots.filter(slot => slot.name);
+  const invited = slots.filter(slot => /invited/i.test(slot.status || '')).length;
+  const qualified = slots.filter(slot => /qualified/i.test(slot.status || '')).length;
+  let description;
+  if (teams.length) description = teams.map((team, index) => `${index + 1}. **${team.name}**`).join('\n').slice(0, 4000);
+  else if (namedSlots.length) description = namedSlots.map(slot => `**${slot.slot}. ${slot.name}**${slot.status ? ` — ${slot.status}` : ''}${slot.qualifier ? ` (${slot.qualifier})` : ''}`).join('\n').slice(0, 4000);
+  else if (slots.length) {
+    const summary = [invited ? `${invited} invited slot${invited === 1 ? '' : 's'}` : null, qualified ? `${qualified} qualifier slot${qualified === 1 ? '' : 's'}` : null].filter(Boolean).join(' • ');
+    description = `**${slots.length} participant slots are available**${summary ? `\n${summary}` : ''}\n\nTeam names have not yet been published by Liquipedia.`;
+  } else if (structure?.participantCount) description = `**${structure.participantCount} participants are expected**\n\nTeam names have not yet been published by Liquipedia.`;
+  else description = 'Participating teams have not yet been published in a structure the bot can verify.';
   return new EmbedBuilder().setColor(0x5865F2).setTitle(eventTitle(event, 'TEAMS')).setDescription(description).setFooter({ text: `Source: ${structure?.source || 'Liquipedia'}` }).setTimestamp();
 }
 
 export function tournamentStructureBracketEmbed(event, structure) {
   const matches = structure?.bracket || [];
-  const description = matches.length
-    ? groupedBracketDescription(matches)
-    : `Bracket not yet published or not extractable.\n\nLiquipedia page: ${structure?.liquipediaPage || 'available but unnamed'}\nTournament page detected: ${structure?.diagnostics?.pageFound ? 'yes' : 'no'}\nBracket blocks detected: ${structure?.diagnostics?.bracketBlocks || 0}\nVerified pairings: 0`; 
-  return new EmbedBuilder().setColor(0x5865F2).setTitle(eventTitle(event, 'BRACKET')).setDescription(description).setFooter({ text: `Source: ${structure?.source || 'Liquipedia'}` }).setTimestamp();
+  const namedMatches = matches.filter(match => (match.teams || []).some(name => name && name !== 'TBD'));
+  let description;
+  if (matches.length && namedMatches.length) description = groupedBracketDescription(matches);
+  else if (matches.length) {
+    const rounds = [...new Set(matches.map(match => match.round || 'Bracket'))];
+    description = `**Bracket structure is available**\n\n${rounds.map(round => `• ${round}`).join('\n')}\n\nTeams, seeding and named pairings have not yet been published.`;
+  } else description = `Bracket structure has not yet been published or cannot currently be verified.\n\nLiquipedia page: ${structure?.liquipediaPage || 'available but unnamed'}\nTournament page detected: ${structure?.diagnostics?.pageFound ? 'yes' : 'no'}`;
+  return new EmbedBuilder().setColor(0x5865F2).setTitle(eventTitle(event, 'BRACKET')).setDescription(description.slice(0, 4000)).setFooter({ text: `Source: ${structure?.source || 'Liquipedia'}` }).setTimestamp();
 }
-
 
 export function tournamentStructureDebugEmbed(event, debug) {
   const capabilities = debug?.capabilities || {};
